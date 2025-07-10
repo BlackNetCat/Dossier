@@ -38,8 +38,8 @@ class MainWindow(QMainWindow):
         about_action.triggered.connect(self.about)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(("Id", "Name", "Rank", "Mobile"))
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(("Id", "Name", "Call Sign", "Rank", "Mobile"))
         self.table.verticalHeader().setVisible(False)
         self.setCentralWidget(self.table)
 
@@ -118,13 +118,20 @@ class EditDialog(QDialog):
         # Get id from selected row
         self.person_id = dossier.table.item(index, 0).text()
 
+        person_call = dossier.table.item(index, 2).text()
+
         # Update person name widget
         self.person_name = QLineEdit(person_name)
         self.person_name.setPlaceholderText("Name")
         layout.addWidget(self.person_name)
 
+        # Update person call sigh widget
+        self.person_call = QLineEdit(person_call)
+        self.person_call.setPlaceholderText("Call Sigh")
+        layout.addWidget(self.person_call)
+
         # Add combo box of ranks
-        rank_name = dossier.table.item(index, 2).text()
+        rank_name = dossier.table.item(index, 3).text()
         self.rank_name = QComboBox()
         ranks = ["Soldier", "Senior Soldier", "Junior Sergeant", "Sergeant", "Senior Sergeant"]
         self.rank_name.addItems(ranks)
@@ -132,7 +139,7 @@ class EditDialog(QDialog):
         layout.addWidget(self.rank_name)
 
         # Add mobile widget
-        mobile = dossier.table.item(index, 3).text()
+        mobile = dossier.table.item(index, 4).text()
         self.mobile = QLineEdit(mobile)
         self.mobile.setPlaceholderText("Mobile")
         layout.addWidget(self.mobile)
@@ -147,8 +154,9 @@ class EditDialog(QDialog):
     def update_person(self):
         connection = DatabaseConnection().connect()
         cursor = connection.cursor()
-        cursor.execute("UPDATE persons SET name = ?, rank = ?, mobile = ? WHERE id = ?",
+        cursor.execute("UPDATE persons SET name = ?, call = ?, rank = ?, mobile = ? WHERE id = ?",
                        (self.person_name.text(),
+                        self.person_call.text(),
                         self.rank_name.itemText(self.rank_name.currentIndex()),
                         self.mobile.text(),
                         self.person_id))
@@ -210,6 +218,11 @@ class InsertDialog(QDialog):
         self.person_name.setPlaceholderText("Name")
         layout.addWidget(self.person_name)
 
+        # Add person call sigh widget
+        self.person_call = QLineEdit()
+        self.person_call.setPlaceholderText("Call Sigh")
+        layout.addWidget(self.person_call)
+
         # Add combo box of ranks
         self.rank_name = QComboBox()
         ranks = ["Soldier", "Senior Soldier", "Junior Sergeant", "Sergeant", "Senior Sergeant"]
@@ -229,12 +242,13 @@ class InsertDialog(QDialog):
         self.setLayout(layout)
     def add_person(self):
         name = self.person_name.text()
+        call = self.person_call.text()
         rank = self.rank_name.itemText(self.rank_name.currentIndex())
         mobile = self.mobile.text()
         connection = DatabaseConnection().connect()
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO persons (name, rank, mobile) VALUES (?, ?, ?)",
-                       (name, rank, mobile))
+        cursor.execute("INSERT INTO persons (name, call, rank, mobile) VALUES (?, ?, ?, ?)",
+                       (name, call, rank, mobile))
         connection.commit()
         cursor.close()
         connection.close()
